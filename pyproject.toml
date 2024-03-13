@@ -1,0 +1,32 @@
+[tool.poetry]
+name = "brains"
+version = "0.1.0"
+description = ""
+authors = ["Alexander Smirnov <alex@asmirnov.xyz>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.11,<3.12"
+pyaudio = "^0.2.14"
+openwakeword = "^0.6.0"
+openai = "^1.13.3"
+elevenlabs = "0.3.0b0"
+loguru = "^0.7.2"
+fire = "^0.6.0"
+pydantic-settings = "^2.2.1"
+
+
+[tool.poetry.group.dev.dependencies]
+black = "^24.2.0"
+isort = "^5.13.2"
+traitlets = "5.9.0"
+notebook = "6.4.12"
+jupyter = "^1.0.0"
+jupyter-contrib-nbextensions = "^0.7.0"
+
+[tool.black]
+line-length = 120
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
