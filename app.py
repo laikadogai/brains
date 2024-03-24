@@ -55,10 +55,7 @@ def active_listening_loop():
 
     logger.info("Listening for wakewords...")
     while True:
-        mic_audio = np.frombuffer(
-            mic_stream.read(CHUNK_SIZE),
-            dtype=np.int16,
-        )
+        mic_audio = np.frombuffer(mic_stream.read(CHUNK_SIZE), dtype=np.int16)
 
         prediction = owwModel.predict(mic_audio)
         if type(prediction) != dict:
