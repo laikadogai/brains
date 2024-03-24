@@ -5,9 +5,11 @@ from collections import defaultdict
 from datetime import datetime
 
 import numpy as np
+import openwakeword
 import pyaudio
 from loguru import logger
 from openwakeword.model import Model
+from openwakeword.utils import download_models
 from scipy.io import wavfile
 
 from brains import args
@@ -97,4 +99,8 @@ def active_listening_loop():
 
 
 if __name__ == "__main__":
+    # Download preprocessing models in case
+    # they were not already loaded
+    download_models()
+
     active_listening_loop()
