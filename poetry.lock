@@ -1468,6 +1468,20 @@ intel-openmp = "==2021.*"
 tbb = "==2021.*"
 
 [[package]]
+name = "modern-robotics"
+version = "1.1.1"
+description = "Modern Robotics: Mechanics, Planning, and Control: Code Library"
+optional = false
+python-versions = "*"
+files = [
+    {file = "modern_robotics-1.1.1-py3-none-any.whl", hash = "sha256:f2d41f20f0a50cb00e74cc646bf7548bea8c7d5e5628b9c0614c407e691d0754"},
+    {file = "modern_robotics-1.1.1.tar.gz", hash = "sha256:76227293e674fbd307ffc3b1d49d594839c0fe83f3bb594ec3b58cf584a2a0ea"},
+]
+
+[package.dependencies]
+numpy = "*"
+
+[[package]]
 name = "mpmath"
 version = "1.3.0"
 description = "Python library for arbitrary-precision floating-point arithmetic"
@@ -3706,4 +3720,4 @@ dev = ["black (>=19.3b0)", "pytest (>=4.6.2)"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.12"
-content-hash = "aaec0cad05dd4c67a8b2d77fc3df193cd7cead4ceb92d51ec876a525bd7fc22e"
+content-hash = "60e870f450e6acda83f4d31a06b12b77bd1d51aed1fc3a50fa89f597d13932e7"
