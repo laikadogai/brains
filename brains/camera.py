@@ -4,22 +4,71 @@ from typing import List, Tuple, TypedDict
 import cv2
 import numpy as np
 import pyrealsense2 as rs
+import rclpy
 import torch
+from cv_bridge import CvBridge, CvBridgeError
 from loguru import logger
 from numpy._typing import NDArray
-from PIL import Image
+from PIL import Image as PILImage
+from rclpy.node import Node
+from sensor_msgs.msg import CameraInfo, Image
 from torch import Tensor
 from transformers import GroundingDinoForObjectDetection, GroundingDinoProcessor
 
 from brains import args
 
+device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+logger.info(f"Detected device: {device}")
+
 object_detection_processor = GroundingDinoProcessor.from_pretrained(args.object_detection_model_id)
-object_detection_model = GroundingDinoForObjectDetection.from_pretrained(args.object_detection_model_id)
+object_detection_model = GroundingDinoForObjectDetection.from_pretrained(args.object_detection_model_id).to(device)
 if (
     type(object_detection_processor) != GroundingDinoProcessor
     or type(object_detection_model) != GroundingDinoForObjectDetection
 ):
     raise TypeError
+
+
+class CameraSubscriberNode(Node):
+    def __init__(self):
+        super().__init__('camera_subscriber_node')
+        self.bridge = CvBridge()
+        self.latest_color_image = None
+        self.latest_depth_image = None
+        self.latest_depth_in_meters = None
+        self.camera_matrix = None
+        self.received_color = False
+        self.received_depth = False
+
+        # Subscriptions
+        self.create_subscription(Image, '/camera/camera/color/image_raw', self.color_callback, 10)
+        self.create_subscription(Image, '/camera/camera/depth/image_rect_raw', self.depth_callback, 10)
+        self.create_subscription(CameraInfo, '/camera/camera/depth/camera_info', self.camera_info_callback, 10)
+
+    def color_callback(self, msg):
+        try:
+            self.latest_color_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
+            self.received_color = True
+            logger.info(f"Got color image with shape: {self.latest_color_image.shape}")
+        except CvBridgeError as e:
+            logger.error(f'Error converting color image: {e}')
+
+    def depth_callback(self, msg):
+        try:
+            depth_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='16UC1')
+            if self.camera_matrix is not None:
+                self.latest_depth_image = depth_image
+                self.latest_depth_in_meters = depth_image * 0.001  # Assume depth scale is 0.001
+                # self.latest_depth_in_meters = depth_image
+                self.received_depth = True
+                logger.info(f"Got depth image with shape: {depth_image.shape}")
+        except CvBridgeError as e:
+            logger.error(f'Error converting depth image: {e}')
+
+    def camera_info_callback(self, msg):
+        fx, fy = msg.k[0], msg.k[4]
+        cx, cy = msg.k[2], msg.k[5]
+        self.camera_matrix = np.array([[fx, 0, cx], [0, fy, cy], [0, 0, 1]])
 
 
 class ObjectDetectionResult(TypedDict):
@@ -75,6 +124,33 @@ def get_camera_frame() -> Tuple[NDArray[np.uint8], NDArray[np.uint16], NDArray[n
     return color_image, depth_image, depth_image_projected, camera_matrix
 
 
+def get_camera_frame_ros() -> Tuple[NDArray[np.uint8], NDArray[np.uint16], NDArray[np.float64], NDArray[np.float64]]:
+    rclpy.init()
+    node = CameraSubscriberNode()
+
+    while rclpy.ok():
+        rclpy.spin_once(node)
+        if node.received_color and node.received_depth:
+            break
+
+    color_image = node.latest_color_image
+    depth_image = node.latest_depth_image
+    depth_image_projected = node.latest_depth_in_meters
+    camera_matrix = node.camera_matrix
+
+    node.destroy_node()
+    rclpy.shutdown()
+
+    # # Example of using the get_images function
+    # depth, image, depth_meters, camera_matrix = get_images()
+    # if depth is not None and image is not None:
+    #     print(depth.shape, image.shape)
+    #     print("Depth in meters and camera matrix:", depth_meters, camera_matrix)
+    # else:
+    #     print("Failed to retrieve images.")
+
+    return color_image, depth_image, depth_image_projected, camera_matrix
+
 def visualize_frame(color_image: NDArray[np.uint8], depth_image: NDArray[np.uint16]):
 
     # Apply colormap on depth image (image must be converted to 8-bit per pixel first)
@@ -112,10 +188,12 @@ def draw_bounding_boxes(image: NDArray[np.uint8], bbox_data: List[ObjectDetectio
 def find_object(search_string: str) -> Tuple[float, float, float] | None:
 
     logger.info(f"Searching for {search_string}...")
+    # color_image, depth_image, depth_image_projected, camera_matrix = get_camera_frame_ros()
     color_image, depth_image, depth_image_projected, camera_matrix = get_camera_frame()
-    image = Image.fromarray(color_image)
+    logger.info(depth_image)
+    image = PILImage.fromarray(color_image)
 
-    inputs = object_detection_processor(images=image, text=search_string, return_tensors="pt")
+    inputs = object_detection_processor(images=image, text=search_string, return_tensors="pt").to(device)
     with torch.no_grad():
         outputs = object_detection_model(**inputs)
 
@@ -143,7 +221,6 @@ def find_object(search_string: str) -> Tuple[float, float, float] | None:
     )
 
     z: float = depth_image_projected[y_image, x_image]
-    logger.info(f"z={z}")
     x: float = (x_image - ppx) * z / fx
     y: float = (y_image - ppy) * z / fy
 
