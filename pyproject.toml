@@ -6,7 +6,7 @@ authors = ["Alexander Smirnov <alex@asmirnov.xyz>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = ">=3.11,<3.12"
+python = ">=3.10,<3.12"
 pyaudio = "^0.2.14"
 openwakeword = "^0.6.0"
 openai = "^1.13.3"
@@ -21,6 +21,7 @@ opencv-python = "^4.9.0.80"
 pillow = "^10.3.0"
 regex = "2024.4.16"
 transformers = "^4.40.1"
+transforms3d = "^0.4.1"
 
 
 [tool.poetry.group.dev.dependencies]
