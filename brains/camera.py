@@ -122,8 +122,13 @@ def find_object(search_string: str) -> Tuple[float, float, float] | None:
     results: List[ObjectDetectionResult] = object_detection_processor.post_process_grounded_object_detection(
         outputs, inputs.input_ids, box_threshold=0.4, text_threshold=0.3, target_sizes=[image.size[::-1]]
     )
-    # logger.info(f"Object detection results: {results}")
+
     if not results[0]["labels"]:
+        return None
+
+    logger.info(f"Object detection results: {results}")
+    if results[0]["boxes"][0][2] - results[0]["boxes"][0][0] > 300:
+        logger.info(f"Bounding box too big, probably false positive")
         return None
 
     [[fx, _, ppx], [_, fy, ppy], [_, _, _]] = camera_matrix
@@ -133,6 +138,7 @@ def find_object(search_string: str) -> Tuple[float, float, float] | None:
     )
 
     z: float = depth_image_projected[y_image, x_image]
+    logger.info(f"z={z}")
     x: float = (x_image - ppx) * z / fx
     y: float = (y_image - ppy) * z / fy
 
