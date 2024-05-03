@@ -86,11 +86,11 @@ def get_camera_frame() -> Tuple[NDArray[np.uint8], NDArray[np.uint16], NDArray[n
     pipeline_wrapper = rs.pipeline_wrapper(pipeline)
     pipeline_profile = config.resolve(pipeline_wrapper)
     device_product_line = str(pipeline_profile.get_device().get_info(rs.camera_info.product_line))
-    config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, 30)
+    config.enable_stream(rs.stream.depth, 848, 480, rs.format.z16, 30)
     if device_product_line == "L500":
         config.enable_stream(rs.stream.color, 960, 540, rs.format.bgr8, 30)
     else:
-        config.enable_stream(rs.stream.color, 640, 480, rs.format.bgr8, 30)
+        config.enable_stream(rs.stream.color, 848, 480, rs.format.bgr8, 30)
 
     align = rs.align(rs.stream.color)
     pipeline.start(config)
