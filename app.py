@@ -15,6 +15,7 @@ from scipy.io import wavfile
 from brains import args
 from brains.brain import submit_request
 from brains.camera import find_object
+from brains.control import search
 from brains.utils import get_transcription
 
 CHUNK_SIZE = 1280
@@ -97,14 +98,16 @@ def active_listening_loop():
 
 
 if __name__ == "__main__":
+
     # Download preprocessing models in case
     # they were not already loaded
+
     # download_models()
     # active_listening_loop()
 
-    search_string = "a leaf."
+    # result = None
+    # while not result:
+    #     result = find_object(search_string=args.object_search_string)
+    # print(result)
 
-    result = None
-    while not result:
-        result = find_object(search_string=search_string)
-    print(result)
+    search()
