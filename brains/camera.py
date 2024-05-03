@@ -120,7 +120,12 @@ def find_object(search_string: str) -> Tuple[float, float, float] | None:
         outputs = object_detection_model(**inputs)
 
     results: List[ObjectDetectionResult] = object_detection_processor.post_process_grounded_object_detection(
-        outputs, inputs.input_ids, box_threshold=0.4, text_threshold=0.3, target_sizes=[image.size[::-1]]
+        outputs,
+        inputs.input_ids,
+        box_threshold=0.3,
+        text_threshold=0.2,
+        target_sizes=[image.size[::-1]],
+        # outputs, inputs.input_ids, box_threshold=0.4, text_threshold=0.3, target_sizes=[image.size[::-1]]
     )
 
     if not results[0]["labels"]:
