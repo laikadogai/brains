@@ -107,8 +107,10 @@ class ROS2BrainNode(Node):
 
 
 def search():
-    forward_grasp()
     # play_text(f"Found a leaf in {0.2} meters")
+    # play_text(f"Fuck you Eugene!")
+    # forward_grasp()
+    position = find_object(args.object_search_string)
 
     rclpy.init()
     node = ROS2BrainNode()
@@ -135,6 +137,7 @@ def search():
     #         node.rotate(angle)
     #     node.move(distance)
     #     node.send_command("StandDown")
+    #     play_text(f"Approached the leaf!")
     # else:
     #     logger.info(f"'{args.object_search_string}' was not found.")
 
