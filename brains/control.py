@@ -12,6 +12,7 @@ from tf_transformations import euler_from_quaternion
 
 from brains import args
 from brains.camera import find_object
+from brains.grasp import forward_grasp
 from brains.utils import play_text
 
 
@@ -106,32 +107,36 @@ class ROS2BrainNode(Node):
 
 
 def search():
+    forward_grasp()
+    # play_text(f"Found a leaf in {0.2} meters")
+
     rclpy.init()
     node = ROS2BrainNode()
 
-    node.send_command("StandUp")
+    # node.send_command("StandUp")
+    # node.send_command("StandDown")
 
-    degrees_rotate = -90
-    position = None
-    cnt = 0
-    while not position and cnt < math.ceil(360 / abs(degrees_rotate)):
-        position = find_object(args.object_search_string)
-        if not position:
-            node.rotate(degrees_rotate)
-        cnt += 1
-    if position:
-        logger.info(position)
-        x, _, z = position
-        angle = int(math.atan2(x, z) * 180 / math.pi)
-        distance = math.sqrt(x**2 + z**2)
-        logger.info(f"angle: {angle}, distance: {distance}")
-        play_text(f"Found a leaf in {distance:.2f} meters")
-        if angle != 0:
-            node.rotate(angle)
-        node.move(distance)
-        node.send_command("StandDown")
-    else:
-        logger.info(f"'{args.object_search_string}' was not found.")
+    # degrees_rotate = -90
+    # position = None
+    # cnt = 0
+    # while not position and cnt < math.ceil(360 / abs(degrees_rotate)):
+    #     position = find_object(args.object_search_string)
+    #     if not position:
+    #         node.rotate(degrees_rotate)
+    #     cnt += 1
+    # if position:
+    #     logger.info(position)
+    #     x, _, z = position
+    #     angle = int(math.atan2(x, z) * 180 / math.pi)
+    #     distance = math.sqrt(x**2 + z**2)
+    #     logger.info(f"angle: {angle}, distance: {distance}")
+    #     play_text(f"Found a leaf in {distance:.2f} meters")
+    #     if angle != 0:
+    #         node.rotate(angle)
+    #     node.move(distance)
+    #     node.send_command("StandDown")
+    # else:
+    #     logger.info(f"'{args.object_search_string}' was not found.")
 
     node.destroy_node()
     rclpy.shutdown()

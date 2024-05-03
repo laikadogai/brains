@@ -1,0 +1,60 @@
+import sys
+import time
+from os.path import join
+
+import numpy as np
+from interbotix_xs_modules.xs_robot.arm import InterbotixManipulatorXS
+
+"""
+This script makes the end-effector perform pick, pour, and place tasks.
+Note that this script may not work for every arm as it was designed for the wx250.
+Make sure to adjust commanded joint positions and poses as necessary.
+
+To get started, open a terminal and type:
+
+    ros2 launch interbotix_xsarm_control xsarm_control.launch.py robot_model:=wx250
+
+Then change to this directory and type:
+
+    python3 bartender.py
+"""
+
+
+def release_and_wait(gripper):
+    """Command the gripper to release and wait until it stops moving."""
+    gripper.release()  # command the gripper to release
+    while gripper.gripper_moving:  # check if the gripper is still moving
+        time.sleep(0.1)  # wait briefly before checking again
+
+
+def grasp_and_wait(gripper):
+    """Command the gripper to grasp with specified force and wait until it stops moving."""
+    gripper.grasp()  # command the gripper to grasp
+    while gripper.gripper_moving:  # check if the gripper is still moving
+        time.sleep(0.1)  # wait briefly before checking again
+
+
+def forward_grasp():
+    bot = InterbotixManipulatorXS(robot_model="wx250", group_name="arm", gripper_name="gripper")
+
+    if bot.arm.group_info.num_joints < 5:
+        bot.core.get_logger().fatal("This demo requires the robot to have at least 5 joints!")
+        bot.shutdown()
+        sys.exit()
+
+    bot.arm.go_to_home_pose()
+    print(bot.arm.get_ee_pose())
+    # bot.arm.go_to_sleep_pose()
+    print(bot.arm.get_ee_pose())
+    release_and_wait(bot.gripper)
+
+    bot.arm.set_single_joint_position(joint_name="shoulder", position=np.pi / 3)
+    bot.arm.set_single_joint_position(joint_name="wrist_angle", position=np.pi / 6)
+    bot.gripper.grasp(0)
+    time.sleep(2)
+    bot.arm.go_to_home_pose()
+    bot.arm.set_single_joint_position(joint_name="waist", position=np.pi / 4)
+    bot.arm.set_single_joint_position(joint_name="wrist_angle", position=np.pi / 4)
+    release_and_wait(bot.gripper)
+    bot.arm.go_to_sleep_pose()
+    bot.shutdown()
