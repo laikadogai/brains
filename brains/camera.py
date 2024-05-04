@@ -220,7 +220,12 @@ def find_object(search_string: str) -> Tuple[float, float, float] | None:
         (results[0]["boxes"][0][1] + results[0]["boxes"][0][3]) / 2
     )
 
-    z: float = depth_image_projected[y_image, x_image]
+    depth_image_projected_bb = depth_image_projected[int(results[0]["boxes"][0][1]) : int(results[0]["boxes"][0][3]), int(results[0]["boxes"][0][0]) : int(results[0]["boxes"][0][2])]
+    logger.info(depth_image_projected_bb)
+    logger.info(f"Nonzero bb: {np.count_nonzero(depth_image_projected_bb)} / {depth_image_projected_bb.size}")
+
+    # z: float = depth_image_projected[y_image, x_image]
+    z = np.mean(depth_image_projected_bb[depth_image_projected_bb != 0])
     x: float = (x_image - ppx) * z / fx
     y: float = (y_image - ppy) * z / fy
 
