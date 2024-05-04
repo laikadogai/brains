@@ -125,7 +125,7 @@ def get_camera_frame() -> Tuple[NDArray[np.uint8], NDArray[np.uint16], NDArray[n
 
 
 def get_camera_frame_ros() -> Tuple[NDArray[np.uint8], NDArray[np.uint16], NDArray[np.float64], NDArray[np.float64]]:
-    rclpy.init()
+    rclpy.init(domain_id=int(os.environ["ROS_DOMAIN_ID"]))
     node = CameraSubscriberNode()
 
     while rclpy.ok():
