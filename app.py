@@ -97,6 +97,8 @@ def active_listening_loop():
                 submit_request(text)
 
 
+import asyncio
+
 if __name__ == "__main__":
 
     # Download preprocessing models in case
@@ -109,5 +111,4 @@ if __name__ == "__main__":
     # while not result:
     #     result = find_object(search_string=args.object_search_string)
     # print(result)
-
-    search()
+    asyncio.run(search())
