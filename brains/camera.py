@@ -1,3 +1,4 @@
+import os
 import time
 from typing import List, Tuple, TypedDict
 
@@ -141,14 +142,6 @@ def get_camera_frame_ros() -> Tuple[NDArray[np.uint8], NDArray[np.uint16], NDArr
     node.destroy_node()
     rclpy.shutdown()
 
-    # # Example of using the get_images function
-    # depth, image, depth_meters, camera_matrix = get_images()
-    # if depth is not None and image is not None:
-    #     print(depth.shape, image.shape)
-    #     print("Depth in meters and camera matrix:", depth_meters, camera_matrix)
-    # else:
-    #     print("Failed to retrieve images.")
-
     return color_image, depth_image, depth_image_projected, camera_matrix
 
 def visualize_frame(color_image: NDArray[np.uint8], depth_image: NDArray[np.uint16]):
@@ -188,9 +181,12 @@ def draw_bounding_boxes(image: NDArray[np.uint8], bbox_data: List[ObjectDetectio
 def find_object(search_string: str) -> Tuple[float, float, float] | None:
 
     logger.info(f"Searching for {search_string}...")
-    # color_image, depth_image, depth_image_projected, camera_matrix = get_camera_frame_ros()
-    color_image, depth_image, depth_image_projected, camera_matrix = get_camera_frame()
-    logger.info(depth_image)
+    color_image, depth_image, depth_image_projected, camera_matrix = get_camera_frame_ros()
+    # color_image, depth_image, depth_image_projected, camera_matrix = get_camera_frame()
+    # logger.info(camera_matrix)
+    # logger.info(depth_image.shape)
+    # logger.info(f"Nonzero: {np.count_nonzero(depth_image)} / {depth_image.size}")
+    # logger.info(f"Mean of nonzero: {np.mean(depth_image[depth_image != 0])}")
     image = PILImage.fromarray(color_image)
 
     inputs = object_detection_processor(images=image, text=search_string, return_tensors="pt").to(device)
@@ -221,8 +217,8 @@ def find_object(search_string: str) -> Tuple[float, float, float] | None:
     )
 
     depth_image_projected_bb = depth_image_projected[int(results[0]["boxes"][0][1]) : int(results[0]["boxes"][0][3]), int(results[0]["boxes"][0][0]) : int(results[0]["boxes"][0][2])]
-    logger.info(depth_image_projected_bb)
-    logger.info(f"Nonzero bb: {np.count_nonzero(depth_image_projected_bb)} / {depth_image_projected_bb.size}")
+    # logger.info(depth_image_projected_bb)
+    # logger.info(f"Nonzero bb: {np.count_nonzero(depth_image_projected_bb)} / {depth_image_projected_bb.size}")
 
     # z: float = depth_image_projected[y_image, x_image]
     z = np.mean(depth_image_projected_bb[depth_image_projected_bb != 0])
