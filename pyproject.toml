@@ -24,6 +24,7 @@ transformers = "^4.40.1"
 transforms3d = "^0.4.1"
 modern-robotics = "^1.1.1"
 lark = "^1.1.9"
+cyclonedds = "0.10.2"
 
 
 [tool.poetry.group.dev.dependencies]
