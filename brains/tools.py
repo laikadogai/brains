@@ -53,4 +53,12 @@ get_time_tool: ChatCompletionToolParam = {
     },
 }
 
-openai_tools = [move_item_tool, get_time_tool]
+pickup_leaves_tool: ChatCompletionToolParam = {
+    "type": "function",
+    "function": {
+        "name": "pickup_leaves",
+        "description": "Picks up leaves",
+    },
+}
+
+openai_tools = [move_item_tool, get_time_tool, pickup_leaves_tool]

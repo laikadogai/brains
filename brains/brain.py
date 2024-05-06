@@ -6,6 +6,7 @@ from openai import OpenAI
 from openai.types.chat import ChatCompletionMessageParam
 
 from brains import args, prompts
+from brains.control import collect_leaves
 from brains.tools import get_time, move_item, openai_tools
 from brains.utils import play_text
 
@@ -17,7 +18,7 @@ msg_history: List[ChatCompletionMessageParam] = [
 ]
 
 
-def submit_request(text: str):
+async def submit_request(text: str):
 
     msg_history.append({"role": "user", "content": text})
     response = ""
@@ -159,6 +160,11 @@ def submit_request(text: str):
                     result = get_time()
                     response_object_item["state"] = "complete"
                     response_object_item["results"] = result
+                elif func_name == "pickup_leaves":
+                    await collect_leaves()
+
+                    response_object_item["state"] = "complete"
+                    response_object_item["results"] = "Task is finished!"
                 else:
                     logger.error(f"LLM tried to call unknown function: {func_name}")
 
@@ -170,7 +176,7 @@ def submit_request(text: str):
             # If last function call requires simple action execution
             # then print the result of it, save as a response and stop executing
             # to avoid generating next reply by LLM
-            if response_object["fn_calls"][-1]["name"] in ("move_item", "get_time"):
+            if response_object["fn_calls"][-1]["name"] in ("move_item", "get_time", "pickup_leaves"):
                 # # response_object["content"] = response_object["fn_calls"][-1]["results"]
                 # msg_history.append({"role": "assistant", "content": response_object["fn_calls"][-1]["results"]})
                 # play_voice(response_object["fn_calls"][-1]["results"])
