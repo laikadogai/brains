@@ -228,6 +228,6 @@ def find_object(search_string: str) -> Tuple[float, float, float] | None:
     logger.info(f"Camera coordinates of a {search_string}: x={x:.3f}, y={y:.3f}, z={z:.3f} meters")
 
     result_image = draw_bounding_boxes(color_image, results)
-    visualize_frame(result_image, depth_image)
+    # visualize_frame(result_image, depth_image)
 
     return (x, y, z)
