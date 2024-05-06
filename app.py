@@ -15,14 +15,15 @@ from scipy.io import wavfile
 from brains import args
 from brains.brain import submit_request
 from brains.camera import find_object
-from brains.control import search
-from brains.utils import get_transcription
+from brains.control import collect_leaves
+from brains.utils import get_transcription, play_text
 
 CHUNK_SIZE = 1280
 RATE = 16000
 
+download_models()
 
-def active_listening_loop():
+async def active_listening_loop():
 
     # Get microphone stream
     audio = pyaudio.PyAudio()
@@ -54,6 +55,7 @@ def active_listening_loop():
     # Predict continuously on audio stream
     last_save = time.time()
     activation_times = defaultdict(list)
+    last_time_activated = time.time()
 
     logger.info("Listening for wakewords...")
     while True:
@@ -64,9 +66,11 @@ def active_listening_loop():
             continue
 
         for phrase, confidence in prediction.items():
-            if confidence >= args.openwakeword_phrase_detection_threshold:
-                activation_times[phrase].append(time.time())
+            if confidence >= args.openwakeword_phrase_detection_threshold and time.time() - last_time_activated >= 1:
                 logger.debug(f"Heard activation phrase")
+                play_text("What's up buddy?")
+                last_time_activated = time.time()
+                activation_times[phrase].append(time.time())
 
             if (
                 activation_times.get(phrase)
@@ -94,7 +98,7 @@ def active_listening_loop():
                 wavfile.write(filename=audio_buffer, rate=RATE, data=audio)
 
                 text = get_transcription(audio_buffer)
-                submit_request(text)
+                await submit_request(text)
 
 
 import asyncio
@@ -111,4 +115,7 @@ if __name__ == "__main__":
     # while not result:
     #     result = find_object(search_string=args.object_search_string)
     # print(result)
-    asyncio.run(search())
+
+    asyncio.run(active_listening_loop())
+
+    # asyncio.run(collect_leaves())
