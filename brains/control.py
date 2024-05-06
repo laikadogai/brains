@@ -147,7 +147,7 @@ async def rotate(n: int, velocity: float = 0.4, tolerance: int = 5):
     logger.info(f"Target rotation achieved: {current_angle:.2f} degrees.")
 
 
-async def move(n: float, velocity: float = 0.2, offset: float = 0.2):
+async def move(n: float, velocity: float = 0.2, offset: float = 0.15):
 
     current_position = None
     position_achieved = asyncio.Event()
@@ -175,15 +175,18 @@ async def move(n: float, velocity: float = 0.2, offset: float = 0.2):
 
     logger.info(f"Ended up in {current_position} after moving for forward for {n:.2f} meters.")
 
-async def search():
+async def collect_leaves():
+
+    # forward_grasp()
+    # await client.StandDown()
+    # return
 
     await client.StandUp()
     await client.BalanceStand()
-    # await client.StandDown()
 
-    degrees_rotate = 90
+    degrees_rotate = -45
 
-    play_text(f"I am alive!")
+    play_text(f"I'm picking up all the leaves!")
 
     cnt, position = 0, None
     while cnt < math.ceil(360 / abs(degrees_rotate)):
@@ -199,16 +202,21 @@ async def search():
             angle = int(math.atan2(x, z) * 180 / math.pi)
             distance = math.sqrt(x**2 + z**2)
             logger.info(f"angle: {angle}, distance: {distance}")
-            play_text(f"Found a leaf in {distance:.2f} meters. Approaching it!")
-            await rotate(angle, tolerance=20)
-            await move(distance)
-            await asyncio.sleep(2)
-            await client.StandDown()
-            play_text(f"Approached the leaf! Grasping it.")
-            forward_grasp()
+            play_text(f"Found a leaf in {distance:.1f} meters. Approaching it!")
+            await rotate(int(angle), velocity=0.1, tolerance=8)
+            if distance > 0.8:
+                distance = min(distance - 0.7, 0.7)
+                play_text(f"Will approach the leaf in a couple of chunks. Moving for {distance:.1f} meters.")
+                await move(distance)
+            else:
+                await move(distance)
+                await asyncio.sleep(2)
+                await client.StandDown()
+                play_text(f"Approached the leaf! Grasping it.")
+                forward_grasp()
+                await client.StandUp()
+                await client.BalanceStand()
             cnt = 0
-            await client.StandUp()
-            await client.BalanceStand()
 
     play_text(f"No more leaves!")
 
