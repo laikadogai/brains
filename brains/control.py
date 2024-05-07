@@ -8,11 +8,15 @@ from brains.camera import find_object
 from brains.grasp import pick_clothes, pick_leaf, press_button, rotate_grasp
 from brains.utils import play_text
 from clients.sport_client import SportClient, SportState
+from communicator.constants import WEBRTC_TOPICS
 from communicator.cyclonedds.ddsCommunicator import DDSCommunicator
+from communicator.idl.std_msgs.msg.dds_ import String_
 
 communicator = DDSCommunicator(interface="eth0")
 client = SportClient(communicator)
 state = SportState(communicator)
+
+communicator.publish(WEBRTC_TOPICS["ULIDAR_SWITCH"], String_(data='"OFF"'), String_)
 
 
 async def rotate(n: int, velocity: float = 0.4, tolerance: int = 5):
