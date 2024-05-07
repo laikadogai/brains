@@ -52,7 +52,7 @@ def forward_grasp():
 
     # bot.arm.set_joint_positions()
     bot.arm.set_single_joint_position(joint_name="wrist_angle", position=np.pi / 7)
-    bot.arm.set_single_joint_position(joint_name="shoulder", position=np.pi / 3.5)
+    bot.arm.set_single_joint_position(joint_name="shoulder", position=np.pi / 3.6)
     bot.gripper.grasp(0)
     time.sleep(2)
     # bot.arm.go_to_home_pose()
