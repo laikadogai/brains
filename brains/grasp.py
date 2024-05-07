@@ -52,3 +52,17 @@ def pick_clothes():
 
     bot.arm.set_joint_positions([0.0, -np.pi / 3, np.pi / 3, np.pi / 7, 0.0])
     bot.arm.go_to_sleep_pose()
+
+
+def press_button():
+    logger.info(f"Pressing button!")
+
+    bot.arm.go_to_sleep_pose()
+    bot.gripper.grasp()
+
+    bot.arm.set_joint_positions([0.0, -np.pi / 12, 0.0, np.pi / 12, 0.0])
+
+    bot.arm.set_joint_positions([0.0, 0.0, -np.pi / 40, 0.0, 0.0])
+
+    bot.arm.go_to_sleep_pose()
+    bot.gripper.release()
