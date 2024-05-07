@@ -1,3 +1,4 @@
+import asyncio
 import io
 import os
 import time
@@ -16,6 +17,7 @@ from brains import args
 from brains.brain import submit_request
 from brains.camera import find_object
 from brains.control import collect_leaves
+from brains.grasp import forward_grasp
 from brains.utils import get_transcription, play_text
 
 CHUNK_SIZE = 1280
@@ -101,7 +103,6 @@ async def active_listening_loop():
                 await submit_request(text)
 
 
-import asyncio
 
 if __name__ == "__main__":
 
@@ -119,3 +120,5 @@ if __name__ == "__main__":
     asyncio.run(active_listening_loop())
 
     # asyncio.run(collect_leaves())
+
+    # forward_grasp()

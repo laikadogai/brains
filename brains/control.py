@@ -177,14 +177,15 @@ async def move(n: float, velocity: float = 0.2, offset: float = 0.15):
 
 async def collect_leaves():
 
-    # forward_grasp()
     # await client.StandDown()
+    # forward_grasp()
     # return
 
     await client.StandUp()
     await client.BalanceStand()
+    # return
 
-    degrees_rotate = -45
+    degrees_rotate = 45
 
     play_text(f"I'm picking up all the leaves!")
 
