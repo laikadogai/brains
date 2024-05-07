@@ -32,7 +32,7 @@ if (
 
 class CameraSubscriberNode(Node):
     def __init__(self):
-        super().__init__('camera_subscriber_node')
+        super().__init__("camera_subscriber_node")
         self.bridge = CvBridge()
         self.latest_color_image = None
         self.latest_depth_image = None
@@ -42,21 +42,21 @@ class CameraSubscriberNode(Node):
         self.received_depth = False
 
         # Subscriptions
-        self.create_subscription(Image, '/camera/camera/color/image_raw', self.color_callback, 10)
-        self.create_subscription(Image, '/camera/camera/depth/image_rect_raw', self.depth_callback, 10)
-        self.create_subscription(CameraInfo, '/camera/camera/depth/camera_info', self.camera_info_callback, 10)
+        self.create_subscription(Image, "/camera/camera/color/image_raw", self.color_callback, 10)
+        self.create_subscription(Image, "/camera/camera/depth/image_rect_raw", self.depth_callback, 10)
+        self.create_subscription(CameraInfo, "/camera/camera/depth/camera_info", self.camera_info_callback, 10)
 
     def color_callback(self, msg):
         try:
-            self.latest_color_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
+            self.latest_color_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding="bgr8")
             self.received_color = True
             logger.info(f"Got color image with shape: {self.latest_color_image.shape}")
         except CvBridgeError as e:
-            logger.error(f'Error converting color image: {e}')
+            logger.error(f"Error converting color image: {e}")
 
     def depth_callback(self, msg):
         try:
-            depth_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='16UC1')
+            depth_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding="16UC1")
             if self.camera_matrix is not None:
                 self.latest_depth_image = depth_image
                 self.latest_depth_in_meters = depth_image * 0.001  # Assume depth scale is 0.001
@@ -64,7 +64,7 @@ class CameraSubscriberNode(Node):
                 self.received_depth = True
                 logger.info(f"Got depth image with shape: {depth_image.shape}")
         except CvBridgeError as e:
-            logger.error(f'Error converting depth image: {e}')
+            logger.error(f"Error converting depth image: {e}")
 
     def camera_info_callback(self, msg):
         fx, fy = msg.k[0], msg.k[4]
@@ -144,6 +144,7 @@ def get_camera_frame_ros() -> Tuple[NDArray[np.uint8], NDArray[np.uint16], NDArr
 
     return color_image, depth_image, depth_image_projected, camera_matrix
 
+
 def visualize_frame(color_image: NDArray[np.uint8], depth_image: NDArray[np.uint16]):
 
     # Apply colormap on depth image (image must be converted to 8-bit per pixel first)
@@ -216,7 +217,10 @@ def find_object(search_string: str) -> Tuple[float, float, float] | None:
         (results[0]["boxes"][0][1] + results[0]["boxes"][0][3]) / 2
     )
 
-    depth_image_projected_bb = depth_image_projected[int(results[0]["boxes"][0][1]) : int(results[0]["boxes"][0][3]), int(results[0]["boxes"][0][0]) : int(results[0]["boxes"][0][2])]
+    depth_image_projected_bb = depth_image_projected[
+        int(results[0]["boxes"][0][1]) : int(results[0]["boxes"][0][3]),
+        int(results[0]["boxes"][0][0]) : int(results[0]["boxes"][0][2]),
+    ]
     # logger.info(depth_image_projected_bb)
     # logger.info(f"Nonzero bb: {np.count_nonzero(depth_image_projected_bb)} / {depth_image_projected_bb.size}")
 
