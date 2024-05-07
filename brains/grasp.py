@@ -66,3 +66,21 @@ def press_button():
 
     bot.arm.go_to_sleep_pose()
     bot.gripper.release()
+
+
+def rotate_grasp():
+    logger.info(f"Rotating!")
+
+    bot.arm.go_to_sleep_pose()
+    bot.gripper.set_pressure(0.5)
+    bot.gripper.release()
+
+    bot.arm.set_joint_positions([0.0, -np.pi / 12, 0.0, np.pi / 12, 0.0])
+    bot.gripper.grasp()
+
+    bot.arm.set_joint_positions([0.0, -np.pi / 12, 0.0, np.pi / 12, np.pi / 2])
+    bot.gripper.release()
+
+    bot.arm.go_to_sleep_pose()
+    bot.gripper.set_pressure(1.0)
+    bot.gripper.release()
