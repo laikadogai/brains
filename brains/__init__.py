@@ -19,7 +19,7 @@ class Args(BaseSettings):
 
     openwakeword_detected_phrases_output_dir: str = "./data/phrases"
     openwakeword_model_path: str = "./models/openwakeword/hey_laiika.tflite"
-    openwakeword_phrase_detection_threshold: float = 0.5
+    openwakeword_phrase_detection_threshold: float = 0.05
     openwakeword_vad_threshold: float = 0.0
     openwakeword_noise_suppression: bool = False
     openwakeword_inference_framework: Literal["onnx", "tflite"] = "tflite"
