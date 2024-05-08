@@ -18,6 +18,9 @@ from transformers import GroundingDinoForObjectDetection, GroundingDinoProcessor
 
 from brains import args
 
+if not rclpy.ok():
+    rclpy.init(domain_id=int(os.environ["ROS_DOMAIN_ID"]))
+
 device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 logger.info(f"Detected device: {device}")
 
@@ -126,21 +129,18 @@ def get_camera_frame() -> Tuple[NDArray[np.uint8], NDArray[np.uint16], NDArray[n
 
 
 def get_camera_frame_ros() -> Tuple[NDArray[np.uint8], NDArray[np.uint16], NDArray[np.float64], NDArray[np.float64]]:
-    rclpy.init(domain_id=int(os.environ["ROS_DOMAIN_ID"]))
-    node = CameraSubscriberNode()
 
-    while rclpy.ok():
-        rclpy.spin_once(node)
-        if node.received_color and node.received_depth:
-            break
+    camera_subscriber_node = CameraSubscriberNode()
 
-    color_image = node.latest_color_image
-    depth_image = node.latest_depth_image
-    depth_image_projected = node.latest_depth_in_meters
-    camera_matrix = node.camera_matrix
+    while not (camera_subscriber_node.received_color and camera_subscriber_node.received_depth):
+        rclpy.spin_once(camera_subscriber_node)
 
-    node.destroy_node()
-    rclpy.shutdown()
+    color_image = camera_subscriber_node.latest_color_image
+    depth_image = camera_subscriber_node.latest_depth_image
+    depth_image_projected = camera_subscriber_node.latest_depth_in_meters
+    camera_matrix = camera_subscriber_node.camera_matrix
+
+    camera_subscriber_node.destroy_node()
 
     return color_image, depth_image, depth_image_projected, camera_matrix
 
