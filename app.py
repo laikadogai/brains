@@ -6,7 +6,6 @@ from collections import defaultdict
 from datetime import datetime
 
 import numpy as np
-import openwakeword
 import pyaudio
 from loguru import logger
 from openwakeword.model import Model
@@ -15,15 +14,14 @@ from scipy.io import wavfile
 
 from brains import args
 from brains.brain import submit_request
-from brains.camera import find_object
-from brains.control import collect_leaves
-from brains.grasp import forward_grasp
+from brains.control import collect_items
 from brains.utils import get_transcription, play_text
 
 CHUNK_SIZE = 1280
 RATE = 16000
 
 download_models()
+
 
 async def active_listening_loop():
 
@@ -103,22 +101,7 @@ async def active_listening_loop():
                 await submit_request(text)
 
 
-
 if __name__ == "__main__":
 
-    # Download preprocessing models in case
-    # they were not already loaded
-
-    # download_models()
-    # active_listening_loop()
-
-    # result = None
-    # while not result:
-    #     result = find_object(search_string=args.object_search_string)
-    # print(result)
-
     asyncio.run(active_listening_loop())
-
-    # asyncio.run(collect_leaves())
-
-    # forward_grasp()
+    # asyncio.run(collect_items(items=["leaf", "sock"]))
