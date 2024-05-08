@@ -1,6 +1,7 @@
 import json
 from typing import List
 
+import inflect
 from loguru import logger
 from openai import OpenAI
 from openai.types.chat import ChatCompletionMessageParam
@@ -9,7 +10,6 @@ from brains import args, prompts
 from brains.control import collect_items
 from brains.tools import get_time, move_item, openai_tools
 from brains.utils import play_text
-import inflect
 
 p = inflect.engine()
 client = OpenAI()
