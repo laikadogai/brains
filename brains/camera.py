@@ -179,9 +179,9 @@ def draw_bounding_boxes(image: NDArray[np.uint8], bbox_data: List[ObjectDetectio
     return image
 
 
-def find_object(search_string: str) -> Tuple[float, float, float] | None:
+def find_object(search_string: str) -> Tuple[Tuple[float, float, float], str] | Tuple[None, None]:
 
-    logger.info(f"Searching for {search_string}...")
+    logger.info(f"Searching for '{search_string}'...")
     color_image, depth_image, depth_image_projected, camera_matrix = get_camera_frame_ros()
     # color_image, depth_image, depth_image_projected, camera_matrix = get_camera_frame()
     # logger.info(camera_matrix)
@@ -194,6 +194,8 @@ def find_object(search_string: str) -> Tuple[float, float, float] | None:
     with torch.no_grad():
         outputs = object_detection_model(**inputs)
 
+    # visualize_frame(color_image, depth_image)
+
     results: List[ObjectDetectionResult] = object_detection_processor.post_process_grounded_object_detection(
         outputs,
         inputs.input_ids,
@@ -204,12 +206,12 @@ def find_object(search_string: str) -> Tuple[float, float, float] | None:
     )
 
     if not results[0]["labels"]:
-        return None
+        return None, None
 
     logger.info(f"Object detection results: {results}")
     if results[0]["boxes"][0][2] - results[0]["boxes"][0][0] > 300:
         logger.info(f"Bounding box too big, probably false positive")
-        return None
+        return None, None
 
     [[fx, _, ppx], [_, fy, ppy], [_, _, _]] = camera_matrix
 
@@ -225,13 +227,13 @@ def find_object(search_string: str) -> Tuple[float, float, float] | None:
     # logger.info(f"Nonzero bb: {np.count_nonzero(depth_image_projected_bb)} / {depth_image_projected_bb.size}")
 
     # z: float = depth_image_projected[y_image, x_image]
-    z = np.mean(depth_image_projected_bb[depth_image_projected_bb != 0])
+    z = float(np.mean(depth_image_projected_bb[depth_image_projected_bb != 0]))
     x: float = (x_image - ppx) * z / fx
     y: float = (y_image - ppy) * z / fy
 
-    logger.info(f"Camera coordinates of a {search_string}: x={x:.3f}, y={y:.3f}, z={z:.3f} meters")
+    logger.info(f"Camera coordinates of {results[0]['labels'][0]}: x={x:.3f}, y={y:.3f}, z={z:.3f} meters")
 
-    result_image = draw_bounding_boxes(color_image, results)
+    # result_image = draw_bounding_boxes(color_image, results)
     # visualize_frame(result_image, depth_image)
 
-    return (x, y, z)
+    return (x, y, z), results[0]["labels"][0]
