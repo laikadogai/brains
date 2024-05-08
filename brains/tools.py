@@ -40,6 +40,26 @@ move_item_tool: ChatCompletionToolParam = {
 }
 
 
+pick_up_items_tool: ChatCompletionToolParam = {
+    "type": "function",
+    "function": {
+        "name": "pick_up_items",
+        "description": "Picks up al listed items",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "description": "All items that should be picked up. Should be singular, example bootle, not bottles",
+                    "items": {"type": "string"},
+                }
+            },
+            "required": ["addresses"],
+        },
+    },
+}
+
+
 def get_time() -> str:
     logger.info(f"Received tool request")
     return f"Now is {datetime.today().strftime('%I:%M %p')}."
@@ -61,4 +81,4 @@ pickup_leaves_tool: ChatCompletionToolParam = {
     },
 }
 
-openai_tools = [move_item_tool, get_time_tool, pickup_leaves_tool]
+openai_tools = [move_item_tool, get_time_tool, pick_up_items_tool]

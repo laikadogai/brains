@@ -6,7 +6,7 @@ from openai import OpenAI
 from openai.types.chat import ChatCompletionMessageParam
 
 from brains import args, prompts
-from brains.control import collect_leaves
+from brains.control import collect_items
 from brains.tools import get_time, move_item, openai_tools
 from brains.utils import play_text
 
@@ -160,8 +160,9 @@ async def submit_request(text: str):
                     result = get_time()
                     response_object_item["state"] = "complete"
                     response_object_item["results"] = result
-                elif func_name == "pickup_leaves":
-                    await collect_leaves()
+                elif func_name == "pick_up_items":
+                    items = func_args.get("items", "")
+                    await collect_items(items)
 
                     response_object_item["state"] = "complete"
                     response_object_item["results"] = "Task is finished!"
