@@ -25,6 +25,7 @@ class Args(BaseSettings):
     openwakeword_inference_framework: Literal["onnx", "tflite"] = "tflite"
 
     object_detection_model_id: str = "IDEA-Research/grounding-dino-tiny"
+    search_degrees_rotate: int = 45
 
 
 args = Args()

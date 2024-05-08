@@ -89,9 +89,6 @@ async def collect_leaves():
 
     await client.StandUp()
     await client.BalanceStand()
-    # return
-
-    degrees_rotate = 45
 
     play_text(f"I'm picking up all the leaves!")
 
@@ -101,8 +98,8 @@ async def collect_leaves():
         position = find_object(args.object_search_string)
         if not position:
             cnt += 1
-            if cnt < math.ceil(360 / abs(degrees_rotate)):
-                await rotate(degrees_rotate)
+            if cnt < math.ceil(360 / abs(args.search_degrees_rotate)):
+                await rotate(args.search_degrees_rotate)
         else:
             logger.info(position)
             x, _, z = position
