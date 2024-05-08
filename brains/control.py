@@ -6,8 +6,8 @@ import inflect
 from loguru import logger
 
 from brains import args
-from brains.camera import find_object
-from brains.grasp import pick_clothes, pick_leaf, press_button, rotate_grasp
+from brains.camera import find_object, get_sorted_matches
+from brains.grasp import pick_clothes
 from brains.utils import play_text
 from clients.sport_client import SportClient, SportState
 from communicator.constants import WEBRTC_TOPICS
@@ -15,10 +15,10 @@ from communicator.cyclonedds.ddsCommunicator import DDSCommunicator
 from communicator.idl.std_msgs.msg.dds_ import String_
 
 communicator = DDSCommunicator(interface="eth0")
+communicator.publish(WEBRTC_TOPICS["ULIDAR_SWITCH"], String_(data='"OFF"'), String_)
 client = SportClient(communicator)
 state = SportState(communicator)
 
-communicator.publish(WEBRTC_TOPICS["ULIDAR_SWITCH"], String_(data='"OFF"'), String_)
 
 p = inflect.engine()
 
@@ -93,28 +93,32 @@ async def move(n: float, velocity: float = 0.2, offset: float = 0.15):
 
 async def collect_items(items: List[str]):
 
-    items_plural_search_string = p.join([p.plural(item) for item in items]) # type: ignore
-
     await client.StandUp()
     await client.BalanceStand()
 
+    items_plural_search_string = p.join([p.plural(item) for item in items])  # type: ignore
     play_text(f"I'm picking up all {items_plural_search_string}!")
 
-    cnt, position = 0, None
+    cnt = 0
     while cnt < math.ceil(360 / abs(args.search_degrees_rotate)):
         play_text(f"Searching for {items_plural_search_string}!")
-        position, label = find_object(". ".join([p.a(item) for item in items]) + ".") # type: ignore
-        if not position:
+        object_predictions = find_object(". ".join([p.a(item) for item in items]) + ".")  # type: ignore
+
+        if not object_predictions:
             cnt += 1
             if cnt < math.ceil(360 / abs(args.search_degrees_rotate)):
                 await rotate(args.search_degrees_rotate)
         else:
-            logger.info(position)
-            x, _, z = position
-            angle = int(math.atan2(x, z) * 180 / math.pi)
-            distance = math.sqrt(x**2 + z**2)
-            logger.info(f"angle: {angle}, distance: {distance}")
-            play_text(f"Found {label} in {distance:.1f} meters. Approaching it!")
+            sorted_matches = get_sorted_matches(object_predictions)
+            label, distance, angle = sorted_matches[0]
+
+            if len(sorted_matches) > 1:
+                for lbl, dst, _ in sorted_matches:
+                    play_text(f"Found {lbl} in {dst:.1f} meters")
+                play_text(f"Will aproach {label} as it is closest to me")
+            else:
+                play_text(f"Found {label} in {distance:.1f} meters. Approaching it!")
+            logger.info(f"object: {label}, angle: {angle}, distance: {distance}")
             await rotate(int(angle), velocity=0.1, tolerance=8)
             if distance > 0.8:
                 distance = min(distance - 0.7, 0.7)
