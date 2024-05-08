@@ -131,9 +131,3 @@ async def collect_items(items: List[str]):
             cnt = 0
 
     play_text(f"No more {items_plural_search_string}!")
-
-    # rclpy.init()
-    # node = ROS2BrainNode()
-    # node.send_command("StandDown")
-    # node.destroy_node()
-    # rclpy.shutdown()
