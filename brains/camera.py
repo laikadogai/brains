@@ -81,6 +81,12 @@ class ObjectDetectionResult(TypedDict):
     boxes: Tensor
 
 
+class ObjectDetectionResultTransformed(TypedDict):
+    score: Tensor
+    label: str
+    box: Tensor
+
+
 def get_camera_frame() -> Tuple[NDArray[np.uint8], NDArray[np.uint16], NDArray[np.float64], NDArray[np.float64]]:
 
     pipeline = rs.pipeline()
@@ -167,27 +173,54 @@ def visualize_frame(color_image: NDArray[np.uint8], depth_image: NDArray[np.uint
     cv2.waitKey(0)
 
 
-def draw_bounding_boxes(image: NDArray[np.uint8], bbox_data: List[ObjectDetectionResult]) -> NDArray[np.uint8]:
-    for bbox in bbox_data:
-        for box, label in zip(bbox["boxes"], bbox["labels"]):
-            start_point = (int(box[0]), int(box[1]))
-            end_point = (int(box[2]), int(box[3]))
-            color = (255, 0, 0)  # Blue color in BGR
-            thickness = 2
-            image = cv2.rectangle(image, start_point, end_point, color, thickness)
-            cv2.putText(image, label, (start_point[0], start_point[1] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
+def draw_bounding_boxes(image: NDArray[np.uint8], bbox: ObjectDetectionResult) -> NDArray[np.uint8]:
+    for box, label in zip(bbox["boxes"], bbox["labels"]):
+        start_point = (int(box[0]), int(box[1]))
+        end_point = (int(box[2]), int(box[3]))
+        color = (255, 0, 0)  # Blue color in BGR
+        thickness = 2
+        image = cv2.rectangle(image, start_point, end_point, color, thickness)
+        cv2.putText(image, label, (start_point[0], start_point[1] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
     return image
 
 
-def find_object(search_string: str) -> Tuple[Tuple[float, float, float], str] | Tuple[None, None]:
+def process_single_bounding_box(
+    result: ObjectDetectionResultTransformed,
+    depth_image_projected: NDArray[np.float64],
+    camera_matrix: NDArray[np.float64],
+) -> Tuple[Tuple[float, float, float], str] | None:
+
+    if not result["label"]:
+        return None
+
+    if result["box"][2] - result["box"][0] > 300:
+        logger.info(f"Bounding box too big, probably false positive")
+        return None
+
+    x_image, y_image = int((result["box"][0] + result["box"][2]) / 2), int((result["box"][1] + result["box"][3]) / 2)
+
+    depth_image_projected_bb = depth_image_projected[
+        int(result["box"][1]) : int(result["box"][3]),
+        int(result["box"][0]) : int(result["box"][2]),
+    ]
+
+    [[fx, _, ppx], [_, fy, ppy], [_, _, _]] = camera_matrix
+
+    z = float(np.mean(depth_image_projected_bb[depth_image_projected_bb != 0]))
+    x: float = (x_image - ppx) * z / fx
+    y: float = (y_image - ppy) * z / fy
+
+    logger.info(f"Camera coordinates of {result['label']}: x={x:.3f}, y={y:.3f}, z={z:.3f} meters")
+
+    return (x, y, z), result["label"]
+
+
+def find_object(
+    search_string: str, visualize_results: bool = False
+) -> List[Tuple[Tuple[float, float, float], str]] | None:
 
     logger.info(f"Searching for '{search_string}'...")
     color_image, depth_image, depth_image_projected, camera_matrix = get_camera_frame_ros()
-    # color_image, depth_image, depth_image_projected, camera_matrix = get_camera_frame()
-    # logger.info(camera_matrix)
-    # logger.info(depth_image.shape)
-    # logger.info(f"Nonzero: {np.count_nonzero(depth_image)} / {depth_image.size}")
-    # logger.info(f"Mean of nonzero: {np.mean(depth_image[depth_image != 0])}")
     image = PILImage.fromarray(color_image)
 
     inputs = object_detection_processor(images=image, text=search_string, return_tensors="pt").to(device)
@@ -196,44 +229,41 @@ def find_object(search_string: str) -> Tuple[Tuple[float, float, float], str] | 
 
     # visualize_frame(color_image, depth_image)
 
-    results: List[ObjectDetectionResult] = object_detection_processor.post_process_grounded_object_detection(
+    results: ObjectDetectionResult = object_detection_processor.post_process_grounded_object_detection(
         outputs,
         inputs.input_ids,
         box_threshold=0.4,
         text_threshold=0.3,
         target_sizes=[image.size[::-1]],
-        # outputs, inputs.input_ids, box_threshold=0.4, text_threshold=0.3, target_sizes=[image.size[::-1]]
-    )
-
-    if not results[0]["labels"]:
-        return None, None
+    )[0]
 
     logger.info(f"Object detection results: {results}")
-    if results[0]["boxes"][0][2] - results[0]["boxes"][0][0] > 300:
-        logger.info(f"Bounding box too big, probably false positive")
-        return None, None
 
-    [[fx, _, ppx], [_, fy, ppy], [_, _, _]] = camera_matrix
+    if visualize_results:
+        result_image = draw_bounding_boxes(color_image, results)
+        visualize_frame(result_image, depth_image)
 
-    x_image, y_image = int((results[0]["boxes"][0][0] + results[0]["boxes"][0][2]) / 2), int(
-        (results[0]["boxes"][0][1] + results[0]["boxes"][0][3]) / 2
-    )
-
-    depth_image_projected_bb = depth_image_projected[
-        int(results[0]["boxes"][0][1]) : int(results[0]["boxes"][0][3]),
-        int(results[0]["boxes"][0][0]) : int(results[0]["boxes"][0][2]),
+    results_transformed: List[ObjectDetectionResultTransformed] = [
+        {"score": score, "label": label, "box": box}
+        for score, label, box in zip(results["scores"], results["labels"], results["boxes"])
     ]
-    # logger.info(depth_image_projected_bb)
-    # logger.info(f"Nonzero bb: {np.count_nonzero(depth_image_projected_bb)} / {depth_image_projected_bb.size}")
 
-    # z: float = depth_image_projected[y_image, x_image]
-    z = float(np.mean(depth_image_projected_bb[depth_image_projected_bb != 0]))
-    x: float = (x_image - ppx) * z / fx
-    y: float = (y_image - ppy) * z / fy
+    results_processed = [
+        process_single_bounding_box(result_transformed, depth_image_projected, camera_matrix)
+        for result_transformed in results_transformed
+    ]
+    results_processed = list(filter(lambda x: x, results_processed))  # Filtering out None's
+    if not results_processed:
+        return None
+    return results_processed
 
-    logger.info(f"Camera coordinates of {results[0]['labels'][0]}: x={x:.3f}, y={y:.3f}, z={z:.3f} meters")
 
-    # result_image = draw_bounding_boxes(color_image, results)
-    # visualize_frame(result_image, depth_image)
+def get_sorted_matches(predictions: List[Tuple[Tuple[float, float, float], str]]) -> List[Tuple[str, float, int]]:
 
-    return (x, y, z), results[0]["labels"][0]
+    processed_predictions = []
+    for (x, _, z), label in predictions:
+        angle = int(np.arctan2(x, z) * 180 / np.pi)
+        distance = float(np.sqrt(x**2 + z**2))
+        processed_predictions.append((label, distance, angle))
+
+    return sorted(processed_predictions, key=lambda x: x[1])
