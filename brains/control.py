@@ -1,6 +1,8 @@
 import asyncio
 import math
+from typing import List
 
+import inflect
 from loguru import logger
 
 from brains import args
@@ -17,6 +19,8 @@ client = SportClient(communicator)
 state = SportState(communicator)
 
 communicator.publish(WEBRTC_TOPICS["ULIDAR_SWITCH"], String_(data='"OFF"'), String_)
+
+p = inflect.engine()
 
 
 async def rotate(n: int, velocity: float = 0.4, tolerance: int = 5):
@@ -61,7 +65,12 @@ async def move(n: float, velocity: float = 0.2, offset: float = 0.15):
     def on_state_update(x):
         nonlocal current_position
         current_position = x.position
-        if math.sqrt((current_position[0] - initial_position[0]) ** 2 + (current_position[1] - initial_position[1]) ** 2) >= n - offset:
+        if (
+            math.sqrt(
+                (current_position[0] - initial_position[0]) ** 2 + (current_position[1] - initial_position[1]) ** 2
+            )
+            >= n - offset
+        ):
             position_achieved.set()
 
     state.add_callback(on_state_update)
@@ -81,21 +90,20 @@ async def move(n: float, velocity: float = 0.2, offset: float = 0.15):
 
     logger.info(f"Ended up in {current_position} after moving for forward for {n:.2f} meters.")
 
-async def collect_leaves():
 
-    # await client.StandDown()
-    # forward_grasp()
-    # return
+async def collect_items(items: List[str]):
+
+    items_plural_search_string = p.join([p.plural(item) for item in items]) # type: ignore
 
     await client.StandUp()
     await client.BalanceStand()
 
-    play_text(f"I'm picking up all the leaves!")
+    play_text(f"I'm picking up all {items_plural_search_string}!")
 
     cnt, position = 0, None
-    while cnt < math.ceil(360 / abs(degrees_rotate)):
-        play_text(f"Searching for a leaf!")
-        position = find_object(args.object_search_string)
+    while cnt < math.ceil(360 / abs(args.search_degrees_rotate)):
+        play_text(f"Searching for {items_plural_search_string}!")
+        position, label = find_object(". ".join([p.a(item) for item in items]) + ".") # type: ignore
         if not position:
             cnt += 1
             if cnt < math.ceil(360 / abs(args.search_degrees_rotate)):
@@ -106,23 +114,23 @@ async def collect_leaves():
             angle = int(math.atan2(x, z) * 180 / math.pi)
             distance = math.sqrt(x**2 + z**2)
             logger.info(f"angle: {angle}, distance: {distance}")
-            play_text(f"Found a leaf in {distance:.1f} meters. Approaching it!")
+            play_text(f"Found {label} in {distance:.1f} meters. Approaching it!")
             await rotate(int(angle), velocity=0.1, tolerance=8)
             if distance > 0.8:
                 distance = min(distance - 0.7, 0.7)
-                play_text(f"Will approach the leaf in a couple of chunks. Moving for {distance:.1f} meters.")
+                play_text(f"Will approach {label} in a couple of chunks. Moving for {distance:.1f} meters.")
                 await move(distance)
             else:
                 await move(distance)
                 await asyncio.sleep(2)
                 await client.StandDown()
-                play_text(f"Approached the leaf! Grasping it.")
-                forward_grasp()
+                play_text(f"Approached {label}! Grasping it.")
+                pick_clothes()
                 await client.StandUp()
                 await client.BalanceStand()
             cnt = 0
 
-    play_text(f"No more leaves!")
+    play_text(f"No more {items_plural_search_string}!")
 
     # rclpy.init()
     # node = ROS2BrainNode()
