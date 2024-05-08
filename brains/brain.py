@@ -9,7 +9,9 @@ from brains import args, prompts
 from brains.control import collect_items
 from brains.tools import get_time, move_item, openai_tools
 from brains.utils import play_text
+import inflect
 
+p = inflect.engine()
 client = OpenAI()
 
 msg_history: List[ChatCompletionMessageParam] = [
@@ -162,7 +164,11 @@ async def submit_request(text: str):
                     response_object_item["results"] = result
                 elif func_name == "pick_up_items":
                     items = func_args.get("items", "")
-                    await collect_items(items)
+                    singular_items = list(
+                        map(lambda x: p.singular_noun(x) if type(p.singular_noun(x)) != bool else x, items)
+                    )
+
+                    await collect_items(singular_items)  # type: ignore
 
                     response_object_item["state"] = "complete"
                     response_object_item["results"] = "Task is finished!"
