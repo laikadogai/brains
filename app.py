@@ -103,5 +103,5 @@ async def active_listening_loop():
 
 if __name__ == "__main__":
 
+    play_text("I am alive!")
     asyncio.run(active_listening_loop())
-    # asyncio.run(collect_items(items=["leaf", "sock"]))
