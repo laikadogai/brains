@@ -84,3 +84,29 @@ def rotate_grasp():
     bot.arm.go_to_sleep_pose()
     bot.gripper.set_pressure(1.0)
     bot.gripper.release()
+
+
+def wipe():
+    logger.info(f"Wiping!")
+
+    bot.arm.go_to_sleep_pose()
+    bot.gripper.release()
+
+    bot.arm.set_joint_positions([0.0, -np.pi / 4, 0.0, np.pi / 4, 0.0])
+    bot.arm.set_joint_positions([np.pi / 2 + np.pi / 5, -np.pi / 8, np.pi / 3, np.pi / 5, 0.0])
+    bot.gripper.grasp()
+
+    bot.arm.set_joint_positions([0.0, -np.pi / 4, 0.0, np.pi / 4, 0.0])
+
+    bot.arm.set_joint_positions([0.0, np.pi / 4.1, -np.pi / 4, np.pi / 2.5, 0.0])
+    bot.arm.set_joint_positions([np.pi / 6, np.pi / 4.1, -np.pi / 4, np.pi / 2.5, 0.0])
+    bot.arm.set_joint_positions([-np.pi / 6, np.pi / 3.8, -np.pi / 4, np.pi / 2.5, 0.0])
+    bot.arm.set_joint_positions([np.pi / 6, np.pi / 4.1, -np.pi / 4, np.pi / 2.5, 0.0])
+    bot.arm.set_joint_positions([0.0, np.pi / 4.1, -np.pi / 4, np.pi / 2.5, 0.0])
+
+    bot.arm.set_joint_positions([0.0, -np.pi / 4, 0.0, np.pi / 4, 0.0])
+    bot.arm.set_joint_positions([np.pi / 2 + np.pi / 5, -np.pi / 3, np.pi / 3, np.pi / 7, 0.0])
+    bot.gripper.release()
+
+    bot.arm.set_joint_positions([0.0, -np.pi / 3, np.pi / 4, np.pi / 7, 0.0])
+    bot.arm.go_to_sleep_pose()
