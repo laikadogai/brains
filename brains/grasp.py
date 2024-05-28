@@ -20,37 +20,44 @@ bot = InterbotixManipulatorXS(robot_model="wx250s", group_name="arm", gripper_na
 # bot.shutdown()
 
 def pick_cup():
-
     bot.arm.go_to_sleep_pose()
     bot.gripper.release()
-
-    bot.arm.set_ee_pose_components(z=0.45, x=0.1)
-    bot.arm.set_ee_pose_components(z=0.45, x=0.5)
+    bot.arm.set_ee_pose_components(z=0.1, x=0.5)
+    bot.arm.set_ee_pose_components(z=0.1, x=0.6)
     bot.gripper.grasp(delay=3.0)
-    bot.arm.set_ee_pose_components(z=0.45, x=0.1)
     bot.arm.set_ee_pose_components(z=0.25, x=0.1)
+
+
+# def pick_cup():
+#     bot.arm.go_to_sleep_pose()
+#     bot.gripper.release()
 
 def empty_cup():
-
     bot.arm.set_ee_pose_components(z=0.25, x=0.1)
-    bot.arm.set_ee_pose_components(z=0.45, x=0.1)
-    bot.arm.set_ee_pose_components(z=0.45, x=0.1)
-    bot.arm.set_ee_pose_components(z=0.45, x=0.5)
-    bot.arm.set_ee_pose_components(z=0.45, x=0.5, roll=np.pi)
+    bot.arm.set_ee_pose_components(z=0.55, x=0.1)
+    bot.arm.set_ee_pose_components(z=0.55, x=0.1)
+    bot.arm.set_ee_pose_components(z=0.55, x=0.4)
+    bot.arm.set_ee_pose_components(z=0.55, x=0.4, roll=-np.pi / 1.5)
     time.sleep(1)
-    bot.arm.set_ee_pose_components(z=0.45, x=0.5)
-    bot.arm.set_ee_pose_components(z=0.45, x=0.1)
+    bot.arm.set_ee_pose_components(z=0.55, x=0.4)
+    bot.arm.set_ee_pose_components(z=0.55, x=0.1)
     bot.arm.set_ee_pose_components(z=0.25, x=0.1)
 
 def place_cup_to_dishwasher():
-
     bot.arm.set_ee_pose_components(z=0.25, x=0.1)
-    bot.arm.set_ee_pose_components(z=0.3, x=0.5, roll=-np.pi)
-    bot.arm.set_ee_pose_components(z=0.1, x=0.5, roll=-np.pi)
+    bot.arm.set_ee_pose_components(z=0.2, x=0.6, y=-0.1, roll=-np.pi, yaw=-np.pi/4)
+    bot.arm.set_ee_pose_components(z=0.1, x=0.6, y=-0.1, roll=-np.pi, yaw=-np.pi/4)
     bot.gripper.release()
-    bot.arm.set_ee_pose_components(z=0.3, x=0.5, roll=-np.pi)
-    bot.arm.set_ee_pose_components(z=0.3, x=0.5)
+    bot.arm.set_ee_pose_components(z=0.2, x=0.5, roll=-np.pi, yaw=-np.pi/4)
+    bot.arm.set_ee_pose_components(z=0.3, x=0.4)
     bot.arm.go_to_sleep_pose()
+    # bot.arm.set_ee_pose_components(z=0.25, x=0.1)
+
+
+# def place_cup_to_dishwasher():
+#     bot.arm.set_ee_pose_components(z=0.25, x=0.1)
+#     bot.gripper.release(2.0)
+#     bot.gripper.grasp()
 
 def pick_cup_from_dishwasher():
 
