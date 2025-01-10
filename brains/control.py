@@ -9,10 +9,10 @@ from brains import args
 from brains.camera import find_object, get_sorted_matches
 from brains.grasp import pick_clothes
 from brains.utils import play_text
-from clients.sport_client import SportClient, SportState
-from communicator.constants import WEBRTC_TOPICS
-from communicator.cyclonedds.ddsCommunicator import DDSCommunicator
-from communicator.idl.std_msgs.msg.dds_ import String_
+from lib.clients.sport_client import SportClient, SportState
+from lib.communicator.constants import WEBRTC_TOPICS
+from lib.communicator.cyclonedds.ddsCommunicator import DDSCommunicator
+from lib.communicator.idl.std_msgs.msg.dds_ import String_
 
 communicator = DDSCommunicator(interface="eth0")
 communicator.publish(WEBRTC_TOPICS["ULIDAR_SWITCH"], String_(data='"OFF"'), String_)
