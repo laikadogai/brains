@@ -39,5 +39,5 @@ jobs:
       uses: docker/build-push-action@v5
       with:
         file: Dockerfile
-        tags: ghcr.io/robokeeper/brain:latest
+        tags: ghcr.io/laikadogai/brain:latest
         push: true
