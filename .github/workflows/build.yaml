@@ -15,7 +15,6 @@ jobs:
         sudo swapoff -a
         sudo rm -f /swapfile
         sudo apt clean
-        docker rmi $(docker image ls -aq)
         df -h
         sudo rm -rf /usr/share/dotnet
         sudo rm -rf /usr/local/lib/android
